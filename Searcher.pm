@@ -9,7 +9,7 @@ use Carp;
 use strict;
 use vars qw($VERSION $DEBUG $AUTOLOAD);
 
-$VERSION = '0.9';
+$VERSION = '0.91';
 $DEBUG=0;
 
 
@@ -412,17 +412,17 @@ on matching files
         use File::Searcher;
         my $search = File::Searcher->new('*.cgi');
         $search->add_expression(name=>'street',
-        	search=>'1234 Easy St.',
-        	replace=>'456 Hard Way',
-        	options=>'i');
+            search=>'1234 Easy St.',
+            replace=>'456 Hard Way',
+            options=>'i');
         $search->add_expression(name=>'department',
-        	search=>'(Dept\.|Department)(\s+)(\d+)',
-        	replace=>'$1$2$3',
-        	options=>'im');
+            search=>'(Dept\.|Department)(\s+)(\d+)',
+            replace=>'$1$2$3',
+            options=>'im');
         $search->add_expression(name=>'place',
-        	search=>'Portland, OR(.*?)97212',
-        	replace=>'Vicksburg, MI${1}49097',
-        	options=>'is');
+            search=>'Portland, OR(.*?)97212',
+            replace=>'Vicksburg, MI${1}49097',
+            options=>'is');
         $search->start;
         # $search->interactive; SEE File::Searcher::Interactive
         @files_matched = $search->files_matched;
@@ -448,92 +448,97 @@ to reporting and statistics of matches and replacements.
 
 =head2 General Use
 
-=over 4
+  # constructor - with options
 
-=item # constructor - with options
-my $search = File::Searcher-E<gt>new(
+  my $search = File::Searcher->new(
+    file_expression=>'*.txt', # required unless files
+    files=>\@files,                 # required unless file_expression
+    start_directory=> '/path/to/dir',       # default './'
+    backup_extension=> '~',             # default '.bak'
+    do_backup=> '0',                # default 1 will create backup file
+    recurse_subs=> '0',             # default 1 will recurse subs
+    do_replace=> '1',               # default 0 will not replace matches
+    log_mode=> '111',               # unimplemented
+    archive=>'my_archive.tgz',          # default is /start_directory/(system time).tgz
+    do_archive=> '1', # default 0 will not archive matched files
+ );
 
-file_expression=E<gt>'*.txt', # required unless files
-files=E<gt>\@files, # required unless file_expression
-start_directory=E<gt> '/path/to/dir', # default './'
-backup_extension=E<gt> '~', # default '.bak'
-do_backup=E<gt> '0', # default 1 will create backup file
-recurse_subs=E<gt> '0', # default 1 will recurse subs
-do_replace=E<gt> '1', # default 0 will not replace matches
-log_mode=E<gt> '111', # unimplemented
-# default is /start_directory/(system time).tgz
-archive=E<gt>'my_archive.tgz',
-do_archive=E<gt> '1', # default 0 will not archive matched files
-);
+  # constructor - with file expression
 
-# constructor - with file expression
-my $search = File::Searcher-E<gt>new('*.txt');
+  my $search = File::Searcher->new('*.txt');
 
-# constructor - with ref to array of absolute paths
-my $search = File::Searcher-E<gt>new(\@files);
+  # constructor - with ref to array of absolute paths
+
+  my $search = File::Searcher->new(\@files);
+
 The constructor comes in 3 flavors; with options, with file expression,
 or reference to array of absolute paths. If you do not specify the
 options in the constructor, they can be set by accessor methods.
 
-=item $search-E<gt>start_directory('/path/to/dir');
-$search-E<gt>backup_extension('~');
-$search-E<gt>do_backup(0);
-$search-E<gt>recurse_subs(0);
-$search-E<gt>do_replace(1);
-$search-E<gt>archive('my_archive.tgz');
-$search-E<gt>do_archive(0);
+   $search->start_directory('/path/to/dir');
+   $search->backup_extension('~');
+   $search->do_backup(0);
+   $search->recurse_subs(0);
+   $search->do_replace(1);
+   $search->archive('my_archive.tgz');
+   $search->do_archive(0);
 
 Next, the series of expressions are set with options. Expressions will
 be searched in the order which they are added to the search.
 
-=item $search-E<gt>add_expression(
+   $search->add_expression(
+      name=>'street', # required
+      search=>'1234 Easy St.',
+      replace=>'456 Hard Way',
+      case_insensitive=>1,
+   );
 
-name=E<gt>'street', # required
-search=E<gt>'1234 Easy St.',
-replace=E<gt>'456 Hard Way',
-case_insensitive=E<gt>1,);
-$search-E<gt>add_expression(
-name=E<gt>'department',
-search=E<gt>'(Dept\.|Department)(\s+)(\d+)',
-replace=E<gt>'$1$2$3',
-case_insensitive=E<gt>1,
-multiline=E<gt>1,);
-$search-E<gt>add_expression(
-name=E<gt>'place',
-search=E<gt>'Portland, OR(.*?)97212',
-replace=E<gt>'Vicksburg, MI${1}49097',
-singleline=E<gt>1,);
+    $search->add_expression(
+      name=>'department',
+      search=>'(Dept\.|Department)(\s+)(\d+)',
+      replace=>'$1$2$3',
+      case_insensitive=>1,
+      multiline=>1,
+    );
+
+   $search->add_expression(
+      name=>'place',
+      search=>'Portland, OR(.*?)97212',
+      replace=>'Vicksburg, MI${1}49097',
+      singleline=>1,);
+
 Expression options can be set in two ways:
 
-=item # as a single string
-...add_expression(..., options=E<gt> 'ismx');
-# as named paramaters
-...add_expression(..., singleline=E<gt>1, multiline=E<gt>1,case_insensitive=E<gt>1, extended=E<gt>1);
-# Run search
 
-=item C<$search-E<gt>start;>
+   # as a single string
+   ...add_expression(..., options=> 'ismx');
 
-=back
+   # as named paramaters
+   ...add_expression(..., singleline=>1, multiline=>1,case_insensitive=>1, extended=>1);
+
+   # Run search
+
+   $search->start;
 
 =head2 Expanded Functionality
 
-=over 4
-
-=item For expanded FUN-ctionality set references to subroutines to process
+For expanded FUN-ctionality set references to subroutines to process
 when a file match is encountered C<on_file_match> and when a search
 expression is encountered C<on_expression_match>.
 
-=item $search-E<gt>on_file_match(sub{
-my ($file) = @_;
-	return 0 unless $file-E<gt>writable_r; # writable by real id?
-	return 0 unless $file-E<gt>stats-E<gt>size_bytes E<lt> 100;
-	chmod(0777, $file-E<gt>path);
-	return 1;
-});
-# alternatively
-# $search-E<gt>on_file_match(\&my_sub);
 
-=item C<on_file_match> receives a file object with properties methods
+   $search->on_file_match(sub{
+   my ($file) = @_;
+    return 0 unless $file->writable_r; # writable by real id?
+    return 0 unless $file->stats->size_bytes < 100;
+    chmod(0777, $file->path);
+    return 1;
+   });
+   # alternatively
+   # $search->on_file_match(\&my_sub);
+
+
+C<on_file_match> receives a file object with properties methods
 (path, readable_e, writable_e, executable_e, readable_r, writable_r,
 executable_r, owned_e, owned_r, exist, exist_non_zero, zero_size, file,
 directory, link_, pipe_, socket_, block, character, setuid_bit,
@@ -546,70 +551,77 @@ time_status_string, mode_string)
 returns 1 to continue processing files (i.e. look for matches to expressions)
 returns 0 to move to next file
 
-=item $search-E<gt>on_expression_match( sub{
-	my ($match,$expression) = @_;
-	return -100 if scalar($expression-E<gt>files_replaced) E<gt> 7;
-	return -10 if length($match-E<gt>post) E<lt> 120;
-	return 1 if $match-E<gt>match =~ /special(.*?)case/;
-	return 10 unless $match-E<gt>contents =~ /special/;
-	# this is sort of what this module does, but,hey!
-	my $file_contents = $match-E<gt>contents;
-	eval("\$contents =~ s/$match-E<gt>search/$match-E<gt>replace/g$match-E<gt>options;");
-	return $contents;
-});
+   $search->on_expression_match( sub{
+    my ($match,$expression) = @_;
+    return -100 if scalar($expression->files_replaced) > 7;
+    return -10 if length($match->post) < 120;
+    return 1 if $match->match =~ /special(.*?)case/;
+    return 10 unless $match->contents =~ /special/;
+    # this is sort of what this module does, but,hey!
+    my $file_contents = $match->contents;
+    eval("\$contents =~ s/$match->search/$match->replace/g$match->options;");
+    return $contents;
+   });
 
-# alternatively
-#$search-E<gt>on_expression_match(\&my_sub);
+   # alternatively
+   # $search->on_expression_match(\&my_sub);
 
-=item C<on_expression_match> receives a search object with methods(match, pre, post, last, start_offset, end_offset,contents)
-expression object access expression options (search, replace, options, %replacements, %matches, @files_replaced)
-returns -100 to ignore expression, and do not search for it again in any file
-returns -10 to skip to next file
-returns -1 to skip to next match (possibly next file)
-returns 1 to process match (as specified in $search object)
-returns 10 to process all matches in file
-returns 100 to process all occurences in all files
-returns $content (scalar) of file contents, overwrites contents (only to file if specified) and moves to next file
+C<on_expression_match> receives a C<match> object with methods(match, pre, post, last, start_offset, end_offset,contents),
+C<expression> object access expression options (search, replace, options, %replacements, %matches, @files_replaced)
 
-=back
+   returns -100 to ignore expression, and do not search for it again in any file
+   returns -10 to skip to next file
+   returns -1 to skip to next match (possibly next file)
+   returns 1 to process match (as specified in $search object)
+   returns 10 to process all matches in file
+   returns 100 to process all occurences in all files
+   returns $content (scalar) of file contents, overwrites contents (only to file if specified) and moves to next file
+
 
 =head2 Reporting
 
-=over 4
+To see what happened, for the search and each expression, access results.
 
-=item To see what happened, for the search and each expression, access
-results.
+   # search results reports
 
-=item # search results reports
+   @files_matched = $search->files_matched;
+   print "Files Matched\n";
+   print "\t" . join("\n\t", @files_matched) . "\n";
+   print "Text Files:\t" . $search->file_text_cnt . "\n";
+   print "Binary Files:\t" . $search->file_binary_cnt . "\n";
+   print "Uknown Files:\t" . $search->file_unknown_cnt . "\n";
+   print "Total Files:\t" . $search->file_cnt . "\n";
+   print "Directories:\t" . $search->dir_cnt . "\n";
+   print "Hard Links:\t" . $search->link_cnt . "\n";
+   print "Sockets:\t" . $search->socket_cnt . "\n";
+   print "Pipes:\t" . $search->pipe_cnt . "\n";
+   print "Uknown Entries:\t" . $search->unknown_cnt . "\n";
+   print "\n";
 
-@files_matched = $search-E<gt>files_matched;
-print "Files Matched\n";
-print "\t" . join("\n\t", @files_matched) . "\n";
-print "Text Files:\t" . $search-E<gt>file_text_cnt . "\n";
-print "Binary Files:\t" . $search-E<gt>file_binary_cnt . "\n";
-print "Uknown Files:\t" . $search-E<gt>file_unknown_cnt . "\n";
-print "Total Files:\t" . $search-E<gt>file_cnt . "\n";
-print "Directories:\t" . $search-E<gt>dir_cnt . "\n";
-print "Hard Links:\t" . $search-E<gt>link_cnt . "\n";
-print "Sockets:\t" . $search-E<gt>socket_cnt . "\n";
-print "Pipes:\t" . $search-E<gt>pipe_cnt . "\n";
-print "Uknown Entries:\t" . $search-E<gt>unknown_cnt . "\n";
-print "\n";
-# expression results reports
-foreach my $expression (@{$search-E<gt>get_expressions}){
-	my @files_replaced = $search-E<gt>expression($expression)-E<gt>files_replaced;
-	my %matches = $search-E<gt>expression($expression)-E<gt>matches;
-	my %replacements = $search-E<gt>expression($expression)-E<gt>replacements;
-	print "Search/Replace:\t" .
-	$search-E<gt>expression($expression)-E<gt>search . "\t" . $search-E<gt>expression($expression)-E<gt>replace . "\n";
-	print "\tNo Replacements Made\n" and next if @files_replaced E<lt> 1;
-	print "\tFile\t\t\t\t\tMatches\tReplacements\n";
-	foreach my $file (@files_replaced)
-	{print "\t$file\t\t$matches{$file}\t$replacements{$file}\n";}
-	print "\n";
-}
+   # expression results reports
 
-=back
+
+   foreach my $expression (@{$search->get_expressions}){
+
+      my @files_replaced = $search->expression($expression)->files_replaced;
+      my %matches = $search->expression($expression)->matches;
+      my %replacements = $search->expression($expression)->replacements;
+
+      print "Search/Replace:\t" .>
+      $search->expression($expression)->search .
+      "\t" . $search->expression($expression)->replace . "\n";
+
+      print "\tNo Replacements Made\n" and next if @files_replaced < 1;
+      print "\tFile\t\t\t\t\tMatches\tReplacements\n";
+
+      foreach my $file (@files_replaced){
+         print "\t$file\t\t$matches{$file}\t$replacements{$file}\n";
+      }
+        print "\n";
+   }
+
+
+
 
 =head1 CAVEATS
 
@@ -648,6 +660,6 @@ module useful.
 =head1 AUTHOR
 
 Adam Stubbs, C<astubbs@advantagecommunication.com>
-Version 0.9, Last Updated November 14, 2000
+Version 0.91, Last Updated Tue Sep 25 23:08:50 EDT 2001
 
 =cut
