@@ -9,7 +9,7 @@ use Carp;
 use strict;
 use vars qw($VERSION $DEBUG $AUTOLOAD);
 
-$VERSION = '0.91';
+$VERSION = '0.92';
 $DEBUG=0;
 
 
@@ -344,7 +344,9 @@ sub _get_stats{
 	my @p = qw/device_code inode_number mode_flags link_cnt user_id group_id device_type size_bytes time_access_seconds time_modified_seconds time_status_seconds block_system block_file/;
 	my($device_code, $inode_number, $mode_flags, $link_cnt, $user_id, $group_id, $device_type, $size_bytes, $time_access_seconds, $time_modified_seconds, $time_status_seconds, $block_system, $block_file)
 		= stat($file);
-	foreach (@p){eval("\$self->{_files}->{\$file}->stats->$_\(\$$_);");}
+		
+	foreach (@p){eval("\$self->{_files}->{\$file}->stats(new Stats);"); }
+	foreach (@p){eval("\$self->{_files}->{\$file}->stats->$_\(\$$_);"); }
 
 	# extra stats
 	$self->{_files}->{$file}->stats->time_access_string($self->_seconds_2_string_date($time_access_seconds));
