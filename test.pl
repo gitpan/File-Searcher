@@ -87,6 +87,8 @@ print ($file5 eq "test\n\n" && $Etotal == 3 ?  "ok 5\n" : "not ok 5\n");
 
 # test 6
 # test option form
+mkdir('./test');
+system('cat /dev/null > ./test/test.tgz');
 my $search6 = File::Searcher->new(
 	file_expression=>'*.txt',
 	start_directory=>'./',
